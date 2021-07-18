@@ -1,7 +1,7 @@
-import { ExampleComponent } from '.'
+import { useOnlineAnswering } from '.'
 
 describe('ExampleComponent', () => {
   it('is truthy', () => {
-    expect(ExampleComponent).toBeTruthy()
+    expect(useOnlineAnswering).toBeTruthy()
   })
 })

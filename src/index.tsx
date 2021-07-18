@@ -30,9 +30,16 @@ export const useOnlineAnswering = (options: opts) => {
   const complete = async (reason: string) => {
     if (listening) {
       console.log('Buzzed Out due to ', reason)
-      setListening(false)
       playBuzzout()
-      await options.onComplete(''.concat(...answer))
+      setListening(false)
+      await options.onComplete(
+        [...answer, recognizer.finalTranscript]
+          .join(' ')
+          .replace(/[\W]*\S+[\W]*$/, '')
+          .replace(options.keywords.buzzin, '')
+          .replace(/[^\w\s]|_/g, '')
+          .replace(/\s+/g, ' ')
+      )
       setAnswer([])
     }
   }
@@ -58,6 +65,7 @@ export const useOnlineAnswering = (options: opts) => {
     {
       command: options.keywords.buzzout,
       callback: () => {
+        console.log(recognizer)
         complete('BuzzOut')
       },
       isFuzzyMatch: true,
