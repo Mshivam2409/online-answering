@@ -13,16 +13,35 @@ npm install --save online-answering
 ## Usage
 
 ```tsx
-import React, { Component } from 'react'
+import React from 'react'
 
-import MyComponent from 'online-answering'
-import 'online-answering/dist/index.css'
+import { useOnlineAnswering } from 'online-answering'
+import { useState } from 'react'
 
-class Example extends Component {
-  render() {
-    return <MyComponent />
-  }
+const App = () => {
+  const [ready, setReady] = useState(false)
+  useOnlineAnswering({
+    keywords: { buzzin: 'Listen', buzzout: 'Submit' },
+    audio: {
+      buzzin:
+        'https://assets.mixkit.co/sfx/download/mixkit-game-show-wrong-answer-buzz-950.wav',
+      buzzout:
+        'https://assets.mixkit.co/sfx/download/mixkit-game-show-wrong-answer-buzz-950.wav'
+    },
+    timeout: 10000,
+    isReady: ready,
+    onComplete: async (answer) => window.alert(answer)
+  })
+
+  return (
+    <div>
+      <button onClick={() => setReady(true)}>START</button>
+      <button onClick={() => setReady(false)}>STOP</button>
+    </div>
+  )
 }
+
+export default App
 ```
 
 ## License
