@@ -1,11 +1,12 @@
 import React from 'react'
 
-import { useOnlineAnswering } from 'online-answering'
+import { Recorder, useOnlineAnswering } from 'online-answering'
 import { useState } from 'react'
+import { useEffect } from 'react'
 
 const App = () => {
   const [ready, setReady] = useState(false)
-  useOnlineAnswering({
+  const [url] = useOnlineAnswering({
     keywords: { buzzin: 'Listen', buzzout: 'Submit' },
     audio: {
       buzzin:
@@ -13,15 +14,28 @@ const App = () => {
       buzzout:
         'https://assets.mixkit.co/sfx/download/mixkit-game-show-wrong-answer-buzz-950.wav'
     },
-    timeout: 10000,
+    onAudioData: () => {},
+    timeout: 5000,
     isReady: ready,
-    onComplete: async (answer) => window.alert(answer)
+    onComplete: async (answer) => {
+      console.log(answer, url)
+      setTimeout(() => console.log(url), 1000)
+    },
+    onBuzzin: () => console.log('Buzzin')
   })
+
+  useEffect(() => {
+    // null , blob::http
+    console.log(url)
+  }, [url])
 
   return (
     <div>
       <button onClick={() => setReady(true)}>START</button>
       <button onClick={() => setReady(false)}>STOP</button>
+      <Recorder />
+      <Recorder />
+      <audio id='aud' controls src={url as string} />
     </div>
   )
 }

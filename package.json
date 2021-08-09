@@ -1,6 +1,6 @@
 {
   "name": "online-answering",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Made with create-react-library",
   "author": "Mshivam2409",
   "license": "MIT",
@@ -24,7 +24,7 @@
     "deploy": "gh-pages -d example/build"
   },
   "peerDependencies": {
-    "react": "^16.0.0"
+    "react": "^17.0.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^4.2.4",
@@ -62,7 +62,11 @@
     "dist"
   ],
   "dependencies": {
+    "@types/recorder-js": "^1.0.2",
+    "react-countdown-hook": "^1.1.0",
+    "react-media-recorder": "^1.5.0",
     "react-speech-recognition": "^3.8.2",
+    "recorder-js": "^1.0.7",
     "use-sound": "^4.0.1"
   }
 }

@@ -30,7 +30,8 @@ const App = () => {
     },
     timeout: 10000,
     isReady: ready,
-    onComplete: async (answer) => window.alert(answer)
+    onComplete: async (answer) => window.alert(answer),
+    onBuzzin: () => console.log('Buzzin')
   })
 
   return (
