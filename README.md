@@ -12,6 +12,8 @@ npm install --save online-answering
 
 ## Usage
 
+### UseOnlineAnswering
+
 ```tsx
 import React from 'react'
 
@@ -21,16 +23,18 @@ import { useState } from 'react'
 const App = () => {
   const [ready, setReady] = useState(false)
   useOnlineAnswering({
-    keywords: { buzzin: 'Listen', buzzout: 'Submit' },
     audio: {
       buzzin:
         'https://assets.mixkit.co/sfx/download/mixkit-game-show-wrong-answer-buzz-950.wav',
       buzzout:
         'https://assets.mixkit.co/sfx/download/mixkit-game-show-wrong-answer-buzz-950.wav'
     },
-    timeout: 10000,
+    onAudioData: () => {},
+    timeout: 7000,
     isReady: ready,
-    onComplete: async (answer) => window.alert(answer),
+    onComplete: async (answer, blob) => {
+      console.log(answer, blob)
+    },
     onBuzzin: () => console.log('Buzzin')
   })
 
@@ -38,6 +42,41 @@ const App = () => {
     <div>
       <button onClick={() => setReady(true)}>START</button>
       <button onClick={() => setReady(false)}>STOP</button>
+    </div>
+  )
+}
+
+export default App
+```
+
+### UseQuestion
+
+```tsx
+const App = () => {
+  useQuestion({
+    onCue: (cue) => {
+      var div = document.getElementById('disp')
+      if (div) div.innerHTML = div.innerHTML + '  \n' + cue
+    },
+    backend_url: 'http://localhost:5000/hls',
+    recording_id: '4824d613-3e40-4445-ab14-9086bfa4a7a5',
+    token: 'token',
+    header: 'header',
+    mediaId: 'hls'
+  })
+
+  return (
+    <div>
+      <video id='hls' hidden />
+      <button
+        onClick={() => {
+          var video = document.getElementById('hls') as HTMLVideoElement
+          video.play()
+        }}
+      >
+        PLAY
+      </button>
+      <div id='disp'></div>
     </div>
   )
 }

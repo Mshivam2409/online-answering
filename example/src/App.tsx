@@ -1,41 +1,33 @@
 import React from 'react'
 
-import { Recorder, useOnlineAnswering } from 'online-answering'
-import { useState } from 'react'
-import { useEffect } from 'react'
+import { useQuestion } from 'online-answering'
+// import { useState } from 'react'
 
 const App = () => {
-  const [ready, setReady] = useState(false)
-  const [url] = useOnlineAnswering({
-    keywords: { buzzin: 'Listen', buzzout: 'Submit' },
-    audio: {
-      buzzin:
-        'https://assets.mixkit.co/sfx/download/mixkit-game-show-wrong-answer-buzz-950.wav',
-      buzzout:
-        'https://assets.mixkit.co/sfx/download/mixkit-game-show-wrong-answer-buzz-950.wav'
+  useQuestion({
+    onCue: (cue) => {
+      var div = document.getElementById('disp')
+      if (div) div.innerHTML = div.innerHTML + '  \n' + cue
     },
-    onAudioData: () => {},
-    timeout: 5000,
-    isReady: ready,
-    onComplete: async (answer) => {
-      console.log(answer, url)
-      setTimeout(() => console.log(url), 1000)
-    },
-    onBuzzin: () => console.log('Buzzin')
+    backend_url: 'http://localhost:5000/hls',
+    recording_id: '32fdfe78-a1a4-48b8-a2fc-d82021b6afd2',
+    token: '1TGUcC04a8ro6_obh6DKB',
+    mediaId: 'hls',
+    header: 'x-gostreamer-token'
   })
-
-  useEffect(() => {
-    // null , blob::http
-    console.log(url)
-  }, [url])
 
   return (
     <div>
-      <button onClick={() => setReady(true)}>START</button>
-      <button onClick={() => setReady(false)}>STOP</button>
-      <Recorder />
-      <Recorder />
-      <audio id='aud' controls src={url as string} />
+      <video id='hls' hidden />
+      <button
+        onClick={() => {
+          var video = document.getElementById('hls') as HTMLVideoElement
+          video.play()
+        }}
+      >
+        PLAY
+      </button>
+      <div id='disp'></div>
     </div>
   )
 }

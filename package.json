@@ -1,6 +1,6 @@
 {
   "name": "online-answering",
-  "version": "1.0.4",
+  "version": "1.2.2",
   "description": "Made with create-react-library",
   "author": "Mshivam2409",
   "license": "MIT",
@@ -62,11 +62,16 @@
     "dist"
   ],
   "dependencies": {
-    "@types/recorder-js": "^1.0.2",
+    "@tensorflow-models/speech-commands": "^0.5.4",
+    "@tensorflow/tfjs": "^3.8.0",
+    "@tensorflow/tfjs-backend-cpu": "^3.8.0",
+    "@tensorflow/tfjs-backend-wasm": "^3.8.0",
+    "@tensorflow/tfjs-core": "^3.8.0",
+    "hls.js": "^1.0.8",
     "react-countdown-hook": "^1.1.0",
     "react-media-recorder": "^1.5.0",
     "react-speech-recognition": "^3.8.2",
-    "recorder-js": "^1.0.7",
+    "seedrandom": "~2.4.3",
     "use-sound": "^4.0.1"
   }
 }
