@@ -54,7 +54,7 @@ const useQuestion = (options: opts) => {
                 }
             }, [])
 
-            const endListener = useCallback((e: any) => {
+            const endListener = useCallback(() => {
                 supposedCurrentTime = 0;
             }, [])
 
