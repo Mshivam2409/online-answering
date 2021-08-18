@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import Hls from "hls.js";
 
 export interface opts {
@@ -31,36 +31,37 @@ const useQuestion = (options: opts) => {
             video.controls = false;
             hls.attachMedia(video);
 
-            video.addEventListener("play", function (_) {
-                this.textTracks[0].mode = "hidden";
-                this.textTracks[0].addEventListener("cuechange", function (e: any) {
+            const playListener = useCallback((e: any) => {
+                e.currentTarget.textTracks[0].mode = "hidden";
+                e.currentTarget.textTracks[0].addEventListener("cuechange", function (e: any) {
                     if (e.currentTarget && e.currentTarget.activeCues && e.currentTarget.activeCues[0] && e.currentTarget.activeCues[0].text) {
                         options.onCue(e.currentTarget.activeCues[0].text);
                     }
                 });
-            });
+            }, [])
 
-
-            video.addEventListener('timeupdate', function (_) {
-                if (!video.seeking) {
+            const timeUpdateListener = useCallback((e: any) => {
+                if (!e.currentTarget.seeking) {
                     supposedCurrentTime = video.currentTime;
                 }
-            });
-            // prevent user from seeking
-            video.addEventListener('seeking', function (_) {
-                // guard agains infinite recursion:
-                // user seeks, seeking is fired, currentTime is modified, seeking is fired, current time is modified, ....
-                var delta = video.currentTime - supposedCurrentTime;
+            }, [])
+
+            const seekListener = useCallback((e: any) => {
+                var delta = e.currentTarget.currentTime - supposedCurrentTime;
                 if (Math.abs(delta) > 0.01) {
                     console.log("Seeking is disabled");
-                    video.currentTime = supposedCurrentTime;
+                    e.currentTarget.currentTime = supposedCurrentTime;
                 }
-            });
-            // delete the following event handler if rewind is not required
-            video.addEventListener('ended', function (_) {
-                // reset state in order to allow for rewind
+            }, [])
+
+            const endListener = useCallback((e: any) => {
                 supposedCurrentTime = 0;
-            });
+            }, [])
+
+            video.addEventListener('play', playListener);
+            video.addEventListener('timeupdate', timeUpdateListener);
+            video.addEventListener('seeking', seekListener);
+            video.addEventListener('ended', endListener);
 
             hls.on(Hls.Events.MEDIA_ATTACHED, function (_) {
                 console.log("video and hls.js are now bound together !");
@@ -72,6 +73,18 @@ const useQuestion = (options: opts) => {
                     video.textTracks[0].mode = "hidden";
                 });
             });
+
+            return () => {
+                video.removeEventListener('play', playListener);
+                video.removeEventListener('timeupdate', timeUpdateListener);
+                video.removeEventListener('seeking', seekListener);
+                video.removeEventListener('ended', endListener);
+                hls.detachMedia()
+            }
+        }
+
+        return () => {
+            hls.detachMedia()
         }
     }, [options.recording_id]);
 
