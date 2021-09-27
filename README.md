@@ -62,7 +62,10 @@ const App = () => {
     recording_id: '4824d613-3e40-4445-ab14-9086bfa4a7a5',
     token: 'token',
     header: 'header',
-    mediaId: 'hls'
+    mediaId: 'hls',
+    listeners: {
+      seeking: false
+    }
   })
 
   return (

@@ -50,6 +50,7 @@ const useOnlineAnswering = (options: opts) => {
                     .join(' ')
                     .toLowerCase()
                     .replace("go".toLowerCase(), '')
+                    .replace("stop".toLowerCase(), '')
                     .replace(/[^\w\s]|_/g, ''),
                 audioBlob
             )
@@ -78,6 +79,19 @@ const useOnlineAnswering = (options: opts) => {
             fuzzyMatchingThreshold: 0.2,
             bestMatchOnly: true
         },
+        {
+
+            command: "stop",
+            callback: () => {
+                if (listening) {
+                    stopRecording()
+                }
+            },
+            isFuzzyMatch: true,
+            fuzzyMatchingThreshold: 0.2,
+            bestMatchOnly: true
+
+        }
     ]
 
     const recognizer = useSpeechRecognition({ commands })

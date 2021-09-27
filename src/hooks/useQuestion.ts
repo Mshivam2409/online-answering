@@ -1,5 +1,10 @@
-import React, { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Hls from "hls.js";
+import useCountDown from 'react-countdown-hook';
+
+export interface listeners {
+    seeking: boolean
+}
 
 export interface opts {
     backend_url: string
@@ -9,12 +14,17 @@ export interface opts {
     header: string
     onCue: (cue: string) => void
     useCredentials?: boolean
+    listeners: listeners
+    deadlockTimeout: number
+    onDeadlock: (...params: Array<any>) => void
 }
 
 const useQuestion = (options: opts) => {
+    const [deadlockTimeleft, { start: startDeadlockCountdown, reset: resetDeadlockCountdown }] = useCountDown(options.deadlockTimeout, 100);
+    const [active, setActive] = useState<boolean>(false)
+
 
     var supposedCurrentTime = 0;
-
 
     const hls = new Hls({
         xhrSetup: function (xhr, _) {
@@ -23,64 +33,107 @@ const useQuestion = (options: opts) => {
         },
     });
 
-
-
-    React.useEffect(() => {
-        if (Hls.isSupported()) {
-            var video = document.getElementById(options.mediaId) as HTMLVideoElement;
-            video.controls = false;
-            hls.attachMedia(video);
-
-            const playListener = useCallback((e: any) => {
-                e.currentTarget.textTracks[0].mode = "hidden";
-                e.currentTarget.textTracks[0].addEventListener("cuechange", function (e: any) {
-                    if (e.currentTarget && e.currentTarget.activeCues && e.currentTarget.activeCues[0] && e.currentTarget.activeCues[0].text) {
+    const playListener = useCallback((e: any) => {
+        try {
+            e.currentTarget.textTracks[0].mode = "showing";
+            e.currentTarget.textTracks[0].addEventListener("cuechange", function (e: any) {
+                if (e.currentTarget && e.currentTarget.activeCues && e.currentTarget.activeCues[0] && e.currentTarget.activeCues[0].text) {
+                    try {
                         options.onCue(e.currentTarget.activeCues[0].text);
+                    } catch (_) {
+
                     }
-                });
-            }, [])
-
-            const timeUpdateListener = useCallback((e: any) => {
-                if (!e.currentTarget.seeking) {
-                    supposedCurrentTime = video.currentTime;
                 }
-            }, [])
+            });
+        } catch (error) {
+            console.log(error)
+        }
 
-            const seekListener = useCallback((e: any) => {
-                var delta = e.currentTarget.currentTime - supposedCurrentTime;
-                if (Math.abs(delta) > 0.01) {
-                    console.log("Seeking is disabled");
-                    e.currentTarget.currentTime = supposedCurrentTime;
-                }
-            }, [])
+    }, [])
 
-            const endListener = useCallback(() => {
-                supposedCurrentTime = 0;
-            }, [])
 
+
+    const timeUpdateListener = useCallback((e: any) => {
+        if (!e.currentTarget.seeking) {
+            supposedCurrentTime = e.currentTarget.currentTime;
+        }
+        if (supposedCurrentTime > 0.1) {
+            resetDeadlockCountdown()
+        }
+    }, [])
+
+    const seekListener = useCallback((e: any) => {
+        var delta = e.currentTarget.currentTime - supposedCurrentTime;
+        if (Math.abs(delta) > 0.01) {
+            console.log("Seeking is disabled");
+            e.currentTarget.currentTime = supposedCurrentTime;
+        }
+    }, [])
+
+    const endListener = useCallback(() => {
+        supposedCurrentTime = 0;
+    }, [])
+
+    useEffect(() => {
+
+        var video = document.getElementById(options.mediaId) as HTMLVideoElement;
+        if (video) {
             video.addEventListener('play', playListener);
+            video.addEventListener('pause', function (_) {
+                try {
+                    this.removeEventListener('play', playListener)
+                } catch (_) {
+
+                }
+                finally {
+                    if (active) {
+                        video.play()
+                    }
+                }
+            })
+            video.addEventListener('ended', function (_) {
+                this.removeEventListener('play', playListener)
+            })
+            if (options.listeners.seeking)
+                video.addEventListener('seeking', seekListener)
             video.addEventListener('timeupdate', timeUpdateListener);
-            video.addEventListener('seeking', seekListener);
             video.addEventListener('ended', endListener);
+        }
+        return () => {
+            if (video) {
+                video.removeEventListener('play', playListener);
+                video.removeEventListener('seeking', seekListener);
+                video.removeEventListener('ended', endListener);
+            }
+        }
+    }, [])
+
+
+
+    useEffect(() => {
+        var video = document.getElementById(options.mediaId) as HTMLVideoElement;
+
+        if (video && options.recording_id) {
+            hls.attachMedia(video);
 
             hls.on(Hls.Events.MEDIA_ATTACHED, function (_) {
                 console.log("video and hls.js are now bound together !");
                 hls.loadSource(`${options.backend_url}/${options.recording_id}/index.m3u8`);
                 hls.on(Hls.Events.MANIFEST_PARSED, function (_, data) {
-                    console.log(
-                        "manifest loaded, found " + data.levels.length + " quality level"
-                    );
-                    video.textTracks[0].mode = "hidden";
+                    try {
+                        console.log(
+                            "manifest loaded, found " + data.levels.length + " quality level"
+                        );
+                        supposedCurrentTime = 0
+                        setActive(true)
+                        video.play()
+                        console.log("Playing...")
+                        startDeadlockCountdown()
+                    } catch (error) {
+                        console.log(error)
+                    }
                 });
             });
-
-            return () => {
-                video.removeEventListener('play', playListener);
-                video.removeEventListener('timeupdate', timeUpdateListener);
-                video.removeEventListener('seeking', seekListener);
-                video.removeEventListener('ended', endListener);
-                hls.detachMedia()
-            }
         }
 
         return () => {
@@ -88,7 +141,13 @@ const useQuestion = (options: opts) => {
         }
     }, [options.recording_id]);
 
-    return [Hls]
+    useEffect(() => {
+        if (deadlockTimeleft == 100) {
+            options.onDeadlock()
+        }
+    }, [deadlockTimeleft])
+
+    return [Hls, setActive, active]
 }
 
 export default useQuestion;
